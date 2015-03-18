@@ -38,6 +38,7 @@ class Wallabify {
     // Actual loading happens when window.__browserify.loadTests is called (from bootstrap function).
 
     return wallaby => {
+      var affectedFiles = wallaby.affectedFiles;
       if (!self._b || wallaby.anyFilesAdded || wallaby.anyFilesDeleted) {
         self._initRequired = true;
         self._affectedFilesCache = {};
@@ -45,6 +46,7 @@ class Wallabify {
           memo[file.fullPath] = file;
           return memo;
         }, {});
+        affectedFiles = wallaby.allFiles;
 
         self._b = self._createBrowserify({
           entries: _.map(wallaby.allTestFiles, testFile => testFile.fullPath),
@@ -73,9 +75,11 @@ class Wallabify {
       // todo: bundle node_modules into a single file
 
       // removing changed files tracked by wallaby.js from browserify cache
-      _.each(wallaby.affectedFiles, file => {
-        delete self._browserifyCache[file.fullPath];
-      });
+      if (!self._initRequired) {
+        _.each(affectedFiles, file => {
+          delete self._browserifyCache[file.fullPath];
+        });
+      }
 
       return new Promise(
         function (resolve, reject) {
@@ -106,7 +110,7 @@ class Wallabify {
           }
 
           // handling changed files tracked by wallaby.js
-          _.each(wallaby.affectedFiles, function (file) {
+          _.each(affectedFiles, function (file) {
             var cached = self._browserifyCache[file.fullPath];
             if (cached) {
               var code = cached.source;
@@ -180,7 +184,7 @@ class Wallabify {
         // browser pack prelude
       + '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})'
         // passing accumulated files and entry points (browserified tests for the current sandbox)
-      + '(window.__browserify.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.tests.length; i < len; i++) { var test = wallaby.tests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
+      + '(window.__browserify.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
   }
 
   static _patchModuleDependenciesModule() {
