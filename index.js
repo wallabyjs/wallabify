@@ -9,6 +9,8 @@ var convert = require('convert-source-map');
 class Wallabify {
 
   constructor(opts, initializer) {
+    this._patchModuleDependenciesModule();
+
     this._opts = opts || {};
     this._initializer = initializer;
 
@@ -58,9 +60,13 @@ class Wallabify {
 
         self._b.on('dep', function (dep) {
           if (typeof dep.id === 'string') {
-            var key = dep.expose ? dep.file : dep.id;
+            var key = dep.id;
             if (!self._browserifyCache[key]) {
               self._browserifyCache[key] = dep;
+              // external files are cached by file name as well to avoid re-processing them every time
+              if (dep.expose) {
+                self._browserifyCache[dep.file] = dep;
+              }
               // new file that has not been cached before (node module or a source file)
               self._affectedFilesCache[key] = dep;
             }
@@ -187,7 +193,7 @@ class Wallabify {
       + '(window.__browserify.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
   }
 
-  static _patchModuleDependenciesModule() {
+  _patchModuleDependenciesModule() {
     var wallabify = this;
     // patching module dependencies to use wallaby cache
     try {
