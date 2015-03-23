@@ -37,7 +37,7 @@ class Wallabify {
     // Instead, the postprocessor creates new files and lets wallaby.js to serve them to browser as requested.
     // This allows to leverage file-based browser caching as opposed to always reload a full bundle.
     // When separate files load, they only add a function with the file body to the cache object.
-    // Actual loading happens when window.__browserify.loadTests is called (from bootstrap function).
+    // Actual loading happens when window.__moduleBundler.loadTests is called (from bootstrap function).
 
     return wallaby => {
       var affectedFiles = wallaby.affectedFiles;
@@ -179,18 +179,18 @@ class Wallabify {
   }
 
   static _wallabifyFile(id, content, deps) {
-    return 'window.__browserify.cache["' + id + '"] = [function(require, module, exports) {'
+    return 'window.__moduleBundler.cache["' + id + '"] = [function(require, module, exports) {'
       + content + '\n}, ' + JSON.stringify(deps) + '];';
   }
 
   static _getLoaderContent() {
-    return 'window.__browserify = {};'
-      + 'window.__browserify.cache = {};'
-      + 'window.__browserify.loadTests = function () {'
+    return 'window.__moduleBundler = {};'
+      + 'window.__moduleBundler.cache = {};'
+      + 'window.__moduleBundler.loadTests = function () {'
         // browser pack prelude
       + '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})'
         // passing accumulated files and entry points (browserified tests for the current sandbox)
-      + '(window.__browserify.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
+      + '(window.__moduleBundler.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
   }
 
   _patchModuleDependenciesModule() {
