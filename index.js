@@ -130,7 +130,7 @@ class Wallabify {
               // cloning an original file and browserify-ing it
               createFilePromises.push(wallaby.createFile({
                 // adding the suffix to store browserified file along with the original copies
-                path: file.path + '.bro.js',
+                path: file.path + '.bro' + path.extname(file.path),
                 original: file,
                 content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps),
                 sourceMap: sourceMap
@@ -147,7 +147,7 @@ class Wallabify {
               }
               createFilePromises.push(wallaby.createFile({
                 path: file.expose
-                  ? path.join('browserify_external', file.id, 'external.js')
+                  ? path.join('browserify_external', file.id, 'external' +  + path.extname(file.id))
                   : path.join('browserify_node_modules', path.relative(wallaby.nodeModulesDir, file.id)),
                 content: Wallabify._wallabifyFile(file.id, file.source, file.deps)
               }));
