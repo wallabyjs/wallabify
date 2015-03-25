@@ -86,9 +86,6 @@ class Wallabify {
         self._b.pipeline.splice('pack');
       }
 
-      // todo: handle node modules external update
-      // todo: bundle node_modules into a single file
-
       // removing changed files tracked by wallaby.js from browserify cache
       if (!self._initRequired) {
         _.each(affectedFiles, file => {
