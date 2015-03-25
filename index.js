@@ -159,7 +159,7 @@ class Wallabify {
                   ? path.join('browserify_external', file.id, 'external' +  + path.extname(file.id))
                   : path.join('browserify_node_modules', path.relative(wallaby.nodeModulesDir, file.id)),
                 content: Wallabify._wallabifyFile(file.id, file.source, file.deps),
-                ts: 1   // constant timestamp to cache forever (until wallaby restarts)
+                ts: 1   // constant timestamp to cache the file in browser/phantomjs forever (until wallaby restarts)
               }));
             });
           }
