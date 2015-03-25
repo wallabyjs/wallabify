@@ -40,8 +40,17 @@ class Wallabify {
     // Actual loading happens when window.__moduleBundler.loadTests is called (from bootstrap function).
 
     return wallaby => {
+      var logger = wallaby.logger;
       var affectedFiles = wallaby.affectedFiles;
       if (!self._b || wallaby.anyFilesAdded || wallaby.anyFilesDeleted) {
+
+        if (!self._b) {
+          logger.debug('New browserify instance created');
+        }
+        else {
+          logger.debug('Browserify instance re-created because some tracked files were added or deleted');
+        }
+
         self._initRequired = true;
         self._affectedFilesCache = {};
         self._allTrackedFiles = _.reduce(wallaby.allFiles, function (memo, file) {
@@ -159,6 +168,8 @@ class Wallabify {
 
           // resetting till next incremental bundle run
           self._affectedFilesCache = {};
+
+          logger.debug('Emitting %s files', createFilePromises.length);
 
           return Promise.all(createFilePromises);
         });
