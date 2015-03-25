@@ -136,7 +136,7 @@ class Wallabify {
               // cloning an original file and browserify-ing it
               createFilePromises.push(wallaby.createFile({
                 // adding the suffix to store browserified file along with the original copies
-                path: file.path + '.bro' + path.extname(file.path),
+                path: file.path + '.bro.js',
                 original: file,
                 content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps),
                 sourceMap: sourceMap
@@ -152,7 +152,7 @@ class Wallabify {
               var basename = path.basename(file.id, ext);
               createFilePromises.push(wallaby.createFile({
                 // file path/name doesn't matter, just has to be unique for each file
-                path: path.join('__modules', basename + '.' + require('crypto').createHash('md5').update(file.id).digest('hex') + ext),
+                path: path.join('__modules', basename + '.' + require('crypto').createHash('md5').update(file.id).digest('hex') + '.js'),
                 content: Wallabify._wallabifyFile(file.id, file.source, file.deps),
                 ts: 1   // constant timestamp to cache the file in browser/phantomjs forever (until wallaby restarts)
               }));
