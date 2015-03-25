@@ -151,13 +151,11 @@ class Wallabify {
           // handling externally added and not tracked files (such as node modules and external files)
           try {
             _.each(self._affectedFilesCache, function (file) {
-              if (!file.expose && !~file.id.indexOf(wallaby.nodeModulesDir)) {
-                throw new Error('File ' + file.id + ' is neither a node module nor an external dependency.');
-              }
+              var ext = path.extname(file.id);
+              var basename = path.basename(file.id, ext);
               createFilePromises.push(wallaby.createFile({
-                path: file.expose
-                  ? path.join('browserify_external', file.id, 'external' +  + path.extname(file.id))
-                  : path.join('browserify_node_modules', path.relative(wallaby.nodeModulesDir, file.id)),
+                // file path/name doesn't matter, just has to be unique for each file
+                path: path.join('__modules', basename + '.' + require('crypto').createHash('md5').update(file.id).digest('hex') + ext),
                 content: Wallabify._wallabifyFile(file.id, file.source, file.deps),
                 ts: 1   // constant timestamp to cache the file in browser/phantomjs forever (until wallaby restarts)
               }));
