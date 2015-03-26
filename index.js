@@ -6,6 +6,27 @@ var _ = require('lodash');
 var through = require('through2');
 var convert = require('convert-source-map');
 
+/*
+ Postprocessor for wallaby.js runs module bundler compiler incrementally
+ to only build changed or not yet built modules. The compiler is stopped from emitting the bundle/chunks to disk,
+ because while concatenating files is beneficial for production environment, in testing environment it is different.
+ Serving a large bundle/chunk every time when one of many files (that the bundle consists of) changes, is wasteful.
+ So instead, each compiled module code is passed to wallaby,  wallaby caches it in memory (and when required, writes
+ it on disk) and serves each requested module file separately to properly leverage browser caching.
+
+ Apart from emitting module files, the postprocessor also emits a test loader script that executes in browser before
+ any modules. The test loader sets up a global object so that each wrapped module can add itself to the loader cache.
+
+ Each module code is wrapped in such a way that when the module file is loaded in browser, it doesn't execute
+ the module code immediately. Instead, it just adds the function that executes the module code to test loader's cache.
+
+ Modules are loaded from tests (that are entry points) when the tests are loaded. The tests are loaded from wallaby
+ bootstrap function, by calling `__moduleBundler.loadTests()`.
+
+ When wallaby runs tests first time, browser caches all modules and each subsequent test run only needs to load  a
+ changed module files from the server (and not the full bundle).
+ */
+
 class Wallabify {
 
   constructor(opts, initializer) {
@@ -30,14 +51,6 @@ class Wallabify {
       console.error('Browserify node module is not found, missing `npm install browserify --save-dev`?');
       return;
     }
-
-    // wallaby.js postprocessor for browserify
-    // The postprocessor creates and reuses browserify instance.
-    // It splices browserify pipeline so that file concatenation doesn't happen.
-    // Instead, the postprocessor creates new files and lets wallaby.js to serve them to browser as requested.
-    // This allows to leverage file-based browser caching as opposed to always reload a full bundle.
-    // When separate files load, they only add a function with the file body to the cache object.
-    // Actual loading happens when window.__moduleBundler.loadTests is called (from bootstrap function).
 
     return wallaby => {
       var logger = wallaby.logger;
