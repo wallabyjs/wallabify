@@ -1,5 +1,7 @@
 # wallabify
 
+Wallaby.js postprocessor to support browserify.
+
 ## Installation
 
 ``` sh
