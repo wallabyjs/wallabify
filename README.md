@@ -15,7 +15,8 @@ npm install wallabify --save-dev
 
 var wallabify = require('wallabify');
 var wallabyPostprocessor = wallabify({
-    // browserify options
+    // browserify options, such as
+    // insertGlobals: false
   }
   // you may also pass an initializer function to chain other 
   // browserify options, such as transformers
