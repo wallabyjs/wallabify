@@ -56,15 +56,28 @@ You don't need to specify any output options because wallabify doesn't use conca
  
 `debug: true` option must be passed (to make browserify generate source maps) if some JavaScript transformers are used for files where wallaby.js coverage is expected to work.
 
-For your tests you don't have to use the module bundler transformers and where possible may use [wallaby.js preprocessors](https://github.com/wallabyjs/public#preprocessors-setting) instead. For example, if you are using ES6 or JSX, instead of using `.transform(require('babelify')` in the initializer function, you may specify wallaby.js preprocessor:
+For your tests you don't have to use the module bundler transformers and where possible may use [wallaby.js preprocessors](https://github.com/wallabyjs/public#preprocessors-setting) instead. For example, if you are using ES6 or JSX, instead of using `.transform(require('babelify')` in the initializer function, you may specify wallaby.js preprocessor(s):
 
 ``` javascript
+    files: [
+      {pattern: 'src/*.js', load: false}
+    ],
+
+    tests: [
+      {pattern: 'test/*Spec.js', load: false}
+    ],
+    
     preprocessors: {
       '**/*.js': file => require('babel').transform(file.content, {sourceMap: true}),
       '**/*.jsx': file => require('babel').transform(file.content, {sourceMap: true})
-    }
+    },
+    
+    postprocessor: wallabyPostprocessor
 ```
 ### Files and tests
 All source files and tests must have `load: false` set, because wallaby will load browserified versions of these files on `window.__moduleBundler.loadTests()` call in `bootstrap` function.
 
 Source files order doesn't matter, so patterns can be used instead of listing all the files.
+
+Code inside each file is wrapped in such a way that when the file is loaded in browser, it doesn't execute
+ the code immediately. Instead, it just adds some function, that executes the file code, to test loader's cache. Tests and dependent files are loaded from wallaby `bootstrap` function, by calling `__moduleBundler.loadTests()`, and then executed.
