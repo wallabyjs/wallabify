@@ -199,7 +199,7 @@ class Wallabify {
   }
 
   static _wallabifyFile(id, content, deps) {
-    return 'window.__moduleBundler.cache["' + id + '"] = [function(require, module, exports) {'
+    return 'window.__moduleBundler.cache[' + JSON.stringify(id) + '] = [function(require, module, exports) {'
       + content + '\n}, ' + JSON.stringify(deps) + '];';
   }
 
