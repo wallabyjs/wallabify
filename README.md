@@ -51,7 +51,7 @@ module.exports = function () {
 ### Browserify options
 Only specify options that you need for your tests to run to avoid doing anything that would make each test run slower. 
 
-You don't need to specify any output options because wallabify doesn't use concatenated bundle. While concatenating files is beneficial for production environment, in testing environment it is different.
+You don't need to specify any output options because wallabify doesn't use concatenated bundle. While concatenating files is beneficial for a production environment, in a testing environment it is different.
  Serving a large bundle every time when one of many files (that the bundle consists of) changes, is wasteful.
  So instead, each compiled module code is passed to wallaby, wallaby caches it in memory (and when required, writes
  it to disk) and serves each requested module file separately to properly leverage browser caching. 
