@@ -15,8 +15,7 @@ npm install wallabify --save-dev
 
 var wallabify = require('wallabify');
 var wallabyPostprocessor = wallabify({
-    // browserify options, such as
-    // debug: true
+    // browserify options
   }
   // you may also pass an initializer function to chain other 
   // browserify options, such as transformers
@@ -56,8 +55,6 @@ You don't need to specify any output options because wallabify doesn't use conca
  So instead, each compiled module code is passed to wallaby, wallaby caches it in memory (and when required, writes
  it to disk) and serves each requested module file separately to properly leverage browser caching. 
  
-`debug: true` option must be passed (to make browserify generate source maps) if some JavaScript transformers are used for files where wallaby.js coverage is expected to work.
-
 For your tests you don't have to use the module bundler transformers and where possible may use [wallaby.js preprocessors](https://github.com/wallabyjs/public#preprocessors-setting) instead. For example, if you are using ES6 or JSX, instead of using `.transform(require('babelify')` in the initializer function, you may specify wallaby.js preprocessor(s):
 
 ``` javascript
