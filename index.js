@@ -188,7 +188,7 @@ class Wallabify {
 
   _createBrowserify(mandatoryOpts) {
     var paths = mandatoryOpts.paths.concat(this._opts.paths || []);
-    var mergedOpts = _.extend(this._opts, mandatoryOpts);
+    var mergedOpts = _.merge({}, this._opts, mandatoryOpts);
     mergedOpts.paths = paths;
 
     var instance = this._browserify(mergedOpts);
