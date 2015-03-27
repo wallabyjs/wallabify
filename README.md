@@ -49,7 +49,7 @@ module.exports = function () {
 ## Notes
 
 ### Browserify options
-Only specify options that you need for your tests to run to avoid doing anything that would make each test run slower. 
+To make your tests run as fast as possible, only specify options that you need for your tests to run to avoid doing anything that would make each test run slower. When possible, consider using `b.ignore(file)` for dependencies that you don't test and that you tests don't depend on.
 
 You don't need to specify any output options because wallabify doesn't use concatenated bundle. While concatenating files is beneficial for a production environment, in a testing environment it is different.
  Serving a large bundle every time when one of many files (that the bundle consists of) changes, is wasteful.
