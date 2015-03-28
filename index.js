@@ -75,8 +75,7 @@ class Wallabify {
         self._b = self._createBrowserify({
           entries: _.map(wallaby.allTestFiles, testFile => testFile.fullPath),
           paths: wallaby.nodeModulesDir ? [wallaby.nodeModulesDir] : [],
-          cache: {}, packageCache: {}, fullPaths: true,
-          debug: true
+          cache: {}, packageCache: {}, fullPaths: true
         });
 
         self._browserifyCache = self._b._options.cache;
