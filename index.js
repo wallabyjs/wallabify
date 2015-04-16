@@ -33,6 +33,10 @@ class Wallabify {
     this._patchModuleDependenciesModule();
 
     this._opts = opts || {};
+
+    this._prelude = this._opts.prelude;
+    delete this._opts.prelude;
+
     this._initializer = initializer;
 
     this._b = null;
@@ -130,7 +134,7 @@ class Wallabify {
             createFilePromises.push(wallaby.createFile({
               order: -1,  // need to be the first file to load
               path: 'wallabify.js',
-              content: Wallabify._getLoaderContent()
+              content: self._getLoaderContent()
             }));
           }
 
@@ -203,12 +207,13 @@ class Wallabify {
       + content + '\n}, ' + JSON.stringify(deps) + '];';
   }
 
-  static _getLoaderContent() {
+  _getLoaderContent() {
     return 'window.__moduleBundler = {};'
       + 'window.__moduleBundler.cache = {};'
       + 'window.__moduleBundler.loadTests = function () {'
         // browser pack prelude
-      + '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})'
+      + (this._prelude ||
+      '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})')
         // passing accumulated files and entry points (browserified tests for the current sandbox)
       + '(window.__moduleBundler.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
   }
