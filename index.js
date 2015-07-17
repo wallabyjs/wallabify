@@ -5,6 +5,7 @@ var fs = require('graceful-fs');
 var _ = require('lodash');
 var through = require('through2');
 var convert = require('convert-source-map');
+var mm = require('minimatch');
 
 /*
  Postprocessor for wallaby.js runs module bundler compiler incrementally
@@ -35,7 +36,13 @@ class Wallabify {
     this._opts = opts || {};
 
     this._prelude = this._opts.prelude;
+    this._entryPatterns = this._opts.entryPatterns;
     delete this._opts.prelude;
+    delete this._opts.entryPatterns;
+
+    if (this._entryPatterns && _.isString(this._entryPatterns)) {
+      this._entryPatterns = [this._entryPatterns];
+    }
 
     this._initializer = initializer;
 
@@ -44,6 +51,7 @@ class Wallabify {
     this._affectedFilesCache = {};
     this._initRequired = false;
     this._allTrackedFiles = {};
+    this._entryFiles = {};
   }
 
   createPostprocessor() {
@@ -76,8 +84,16 @@ class Wallabify {
         }, {});
         affectedFiles = wallaby.allFiles;
 
+        self._entryFiles = _.reduce(!self._entryPatterns
+            ? wallaby.allTestFiles
+            : _.filter(self._allTrackedFiles, file => _.find(self._entryPatterns, pattern => mm(file.path, pattern))),
+          function (memo, file) {
+            memo[file.fullPath] = file;
+            return memo;
+          }, {});
+
         self._b = self._createBrowserify({
-          entries: _.map(wallaby.allTestFiles, testFile => testFile.fullPath),
+          entries: _.map(self._entryFiles, entryFile => entryFile.fullPath),
           paths: wallaby.nodeModulesDir ? [wallaby.nodeModulesDir] : [],
           cache: {}, packageCache: {}, fullPaths: true
         });
@@ -150,13 +166,16 @@ class Wallabify {
                 code = convert.removeComments(code);
               }
 
+              var isEntryFile = self._entryPatterns && self._entryFiles[file.fullPath];
+
               // cloning an original file and browserify-ing it
               createFilePromises.push(wallaby.createFile({
                 // adding the suffix to store browserified file along with the original copies
                 path: file.path + '.bro.js',
                 original: file,
-                content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps),
-                sourceMap: sourceMap
+                content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps, isEntryFile),
+                sourceMap: sourceMap,
+                order: isEntryFile ? file.order : undefined
               }));
               delete self._affectedFilesCache[file.fullPath];
             }
@@ -202,18 +221,24 @@ class Wallabify {
     return instance;
   }
 
-  static _wallabifyFile(id, content, deps) {
+  static _wallabifyFile(id, content, deps, requireImmediately) {
     return 'window.__moduleBundler.cache[' + JSON.stringify(id) + '] = [function(require, module, exports) {'
-      + content + '\n}, ' + JSON.stringify(deps) + '];';
+      + content + '\n}, ' + JSON.stringify(deps) + '];'
+      + (requireImmediately ? 'window.__moduleBundler.require(' + JSON.stringify(id) + ');' : '');
   }
 
   _getLoaderContent() {
+    var prelude = this._prelude ||
+      '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})';
+
     return 'window.__moduleBundler = {};'
       + 'window.__moduleBundler.cache = {};'
+      + 'window.__moduleBundler.require = function (m) {'
+      + prelude
+      + '(window.__moduleBundler.cache, {}, [m]);'
+      + '};'
       + 'window.__moduleBundler.loadTests = function () {'
-        // browser pack prelude
-      + (this._prelude ||
-      '(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module \'"+o+"\'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})')
+      + prelude
         // passing accumulated files and entry points (browserified tests for the current sandbox)
       + '(window.__moduleBundler.cache, {}, (function(){ var testIds = []; for(var i = 0, len = wallaby.loadedTests.length; i < len; i++) { var test = wallaby.loadedTests[i]; if (test.substr(-7) === ".bro.js") testIds.push(wallaby.baseDir + test.substr(0, test.length - 7)); } return testIds; })()); };'
   }
@@ -251,7 +276,7 @@ class Wallabify {
     catch (e) {
       // not critical
       console.warn('Failed to patch `module-deps` module, wallaby.js file cache will not be used.'
-      + '\nIt\'s not a critical issue, however tests will run faster when wallaby.js file cache is used.');
+        + '\nIt\'s not a critical issue, however tests will run faster when wallaby.js file cache is used.');
     }
   }
 }
