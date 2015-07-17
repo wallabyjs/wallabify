@@ -28,6 +28,7 @@
     "convert-source-map": "^1.0.0",
     "graceful-fs": "^3.0.6",
     "lodash": "^3.5.0",
+    "minimatch": "2.0.1",
     "through2": "^0.6.3"
   }
 }
