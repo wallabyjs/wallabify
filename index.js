@@ -152,6 +152,16 @@ class Wallabify {
               path: 'wallabify.js',
               content: self._getLoaderContent()
             }));
+
+            // Executing all entry files
+            if (self._entryPatterns && self._entryFiles && !_.isEmpty(self._entryFiles)) {
+              createFilePromises.push(wallaby.createFile({
+                order: Infinity,
+                path: 'wallabify_entry.js',
+                content: _.reduce(_.values(self._entryFiles),
+                  (memo, file) => memo + 'window.__moduleBundler.require(' + JSON.stringify(file.fullPath) + ');', '')
+              }));
+            }
           }
 
           // handling changed files tracked by wallaby.js
@@ -173,7 +183,7 @@ class Wallabify {
                 // adding the suffix to store browserified file along with the original copies
                 path: file.path + '.bro.js',
                 original: file,
-                content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps, isEntryFile),
+                content: Wallabify._wallabifyFile(file.fullPath, code, cached.deps),
                 sourceMap: sourceMap,
                 order: isEntryFile ? file.order : undefined
               }));
@@ -221,10 +231,9 @@ class Wallabify {
     return instance;
   }
 
-  static _wallabifyFile(id, content, deps, requireImmediately) {
+  static _wallabifyFile(id, content, deps) {
     return 'window.__moduleBundler.cache[' + JSON.stringify(id) + '] = [function(require, module, exports) {'
-      + content + '\n}, ' + JSON.stringify(deps) + '];'
-      + (requireImmediately ? 'window.__moduleBundler.require(' + JSON.stringify(id) + ');' : '');
+      + content + '\n}, ' + JSON.stringify(deps) + '];';
   }
 
   _getLoaderContent() {
