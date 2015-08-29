@@ -159,7 +159,7 @@ class Wallabify {
                 order: Infinity,
                 path: 'wallabify_entry.js',
                 content: _.reduce(_.values(self._entryFiles),
-                  (memo, file) => memo + 'window.__moduleBundler.require(' + JSON.stringify(file.fullPath) + ');', '')
+                  (memo, file) => memo + (file.test ? '' : 'window.__moduleBundler.require(' + JSON.stringify(file.fullPath) + ');'), '')
               }));
             }
           }
