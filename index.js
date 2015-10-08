@@ -199,8 +199,7 @@ class Wallabify {
               createFilePromises.push(wallaby.createFile({
                 // file path/name doesn't matter, just has to be unique for each file
                 path: path.join('__modules', basename + '.' + require('crypto').createHash('md5').update(file.id).digest('hex') + '.js'),
-                content: Wallabify._wallabifyFile(file.id, file.source, file.deps),
-                ts: 1   // constant timestamp to cache the file in browser/phantomjs forever (until wallaby restarts)
+                content: Wallabify._wallabifyFile(file.id, file.source, file.deps)
               }));
             });
           }
