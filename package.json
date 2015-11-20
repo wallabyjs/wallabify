@@ -1,6 +1,6 @@
 {
   "name": "wallabify",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Browserify support in wallaby.js",
   "main": "index.js",
   "scripts": {
