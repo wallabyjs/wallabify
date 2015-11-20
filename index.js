@@ -253,9 +253,21 @@ class Wallabify {
 
   _patchModuleDependenciesModule() {
     var wallabify = this;
+    var moduleDeps;
+
     // patching module dependencies to use wallaby cache
     try {
-      require('browserify/node_modules/module-deps').prototype.readFile = function (file, id) {
+
+      try {
+        // npm 2
+        moduleDeps = require('browserify/node_modules/module-deps');
+      }
+      catch (e) {
+        // npm 3
+        moduleDeps = require('module-deps');
+      }
+
+      moduleDeps.prototype.readFile = function (file, id) {
         var self = this;
         var tr = through();
         if (this.cache && this.cache[file]) {
