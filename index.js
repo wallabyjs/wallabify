@@ -133,7 +133,7 @@ class Wallabify {
             self._b.bundle()
               .on('data', () => {
               })
-              .on('error', err => reject(err))
+              .on('error', err => reject(err.stack ? err : new Error(err.toString())))
               .on('end', () => resolve());
           } catch (err) {
             reject(err);
